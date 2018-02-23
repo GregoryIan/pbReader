@@ -122,6 +122,9 @@ func readBinlogNames(dirpath string) ([]string, error) {
 func checkBinlogNames(names []string) []string {
 	var fnames []string
 	for _, name := range names {
+		if strings.HasSuffix(name, "savepoint") {
+			continue
+		}
 		if _, err := parseBinlogName(name); err != nil {
 			if !strings.HasSuffix(name, ".tmp") {
 				log.Warningf("ignored file %v in wal", name)
@@ -136,7 +139,8 @@ func checkBinlogNames(names []string) []string {
 
 func parseBinlogName(str string) (index uint64, err error) {
 	if !strings.HasPrefix(str, "binlog-") {
-		log.Fatalf("bad file name %s", str)
+		log.Errorf("bad file name %s", str)
+		return 0, errors.Errorf("bad file name %s", str)
 	}
 
 	_, err = fmt.Sscanf(str, "binlog-%016d", &index)

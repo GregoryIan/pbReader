@@ -1,0 +1,60 @@
+syntax = "proto2";
+
+package pb_binlog;
+
+import "gogoproto/gogo.proto";
+
+option (gogoproto.marshaler_all) = true;
+option (gogoproto.sizer_all) = true;
+option (gogoproto.unmarshaler_all) = true;
+
+message column {
+    optional string  name       = 1 [(gogoproto.nullable) = false];
+
+    // tp[0] is the column field type in binlog, used for decode column value
+    optional bytes    tp         = 2;
+    // column field type in mysql
+    optional string  mysql_type = 3 [(gogoproto.nullable) = false];
+
+    optional bytes value = 4;
+    // changed_value is the changed value in update
+    optional bytes changed_value = 5;
+}
+
+enum EventType {
+    Insert = 0;
+    Update = 1;
+    Delete = 2;
+}
+
+// TableMutation contains mutations in a table.
+message Event {
+    optional string schema_name     = 1;
+    optional string table_name      = 2;
+    optional EventType tp           = 3 [(gogoproto.nullable) = false];
+
+    repeated bytes row = 4;
+}
+
+message DMLData {
+    // mutations contains all the row changes.
+    repeated Event events      = 1 [(gogoproto.nullable) = false];
+}
+
+enum BinlogType {
+    DML = 0; // has commit_ts, dml_data
+    DDL = 1; // has commit_ts, ddl_query
+}
+
+// Binlog contains all the changes in a transaction.
+message Binlog {
+    optional BinlogType    tp             = 1 [(gogoproto.nullable) = false];
+    optional int64         commit_ts      = 2 [(gogoproto.nullable) = false];
+
+
+    // dml_data is marshalled from DML type,
+    optional DMLData       dml_data = 3;
+
+    // ddl_query is the original ddl statement query.
+    optional bytes         ddl_query      = 4;
+}

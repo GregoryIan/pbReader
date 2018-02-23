@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	pb "./pb_binlog"
+	pb "github.com/GregoryIan/pbReader/pb_binlog"
 
 	"github.com/ngaut/log"
 	"github.com/pingcap/tidb/mysql"
